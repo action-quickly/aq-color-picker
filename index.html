@@ -41,22 +41,14 @@
   </div>
   <div class="result" id="result"></div>
   <script>
-    var ipcId = 0, pending = {};
-    function invoke(cmd, args) {
-      return new Promise(function(resolve, reject) {
-        var id = ++ipcId; pending[id] = { resolve: resolve, reject: reject };
-        window.parent.postMessage({ source: "action-quick-plugin", id: id, cmd: cmd, args: args || {} }, "*");
-      });
-    }
+    // 接收插件参数 — 自动填充 hex
     window.addEventListener("message", function(e) {
       var d = e.data;
       if (!d || d.source !== "action-quick-host") return;
-      if (d.type === "aq-init-bridge" && d.script) { try { eval(d.script); } catch(x){} return; }
       if (d.type === "plugin-params" && d.params.contextText) {
         document.getElementById("hex").value = d.params.contextText;
         convert("hex");
       }
-      if (d.id && pending[d.id]) { var c = pending[d.id]; delete pending[d.id]; d.error ? c.reject(d.error) : c.resolve(d.result); }
     });
 
     function onColorChange() {
@@ -106,7 +98,7 @@
     }
 
     function copy(field) {
-      invoke("aq_clipboard_write", { text: document.getElementById(field).value }).then(function() { setResult("已复制"); }).catch(function(e) { setResult("错误: " + e); });
+      aq.clipboard.write(document.getElementById(field).value).then(function() { setResult("已复制"); }).catch(function(e) { setResult("错误: " + e); });
     }
     function setResult(msg) { document.getElementById("result").textContent = msg; }
   </script>
